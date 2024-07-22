@@ -92,7 +92,7 @@ Vagrant.configure("2") do |config|
     gradle -I gradle/support/fetchDependencies.gradle
     gradle buildGhidra
     echo Enter the host with: vagrant ssh
-    echo Run Ghidra by entering the following: ./Ghidra/RuntimeScripts/Linux/ghidraRun
+    echo Run Ghidra by entering the following: ./ghidra-master/Ghidra/RuntimeScripts/Linux/ghidraRun
   SHELL
 
   
