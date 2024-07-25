@@ -13,12 +13,13 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
  
+
     # Default false
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
    
     # Default true
-  config.ssh.keep_alive = false
+  config.ssh.keep_alive = true
  
   config.vm.define :kaliserver do |kaliserver|
     kaliserver.vm.box = "kalilinux/rolling"
@@ -29,8 +30,8 @@ Vagrant.configure("2") do |config|
       libvirt.connect_via_ssh = true
       libvirt.username = "jason"
       libvirt.password = ''
-      libvirt.memory = 4048
-      libvirt.cpus = 2
+      libvirt.memory = 8192
+      libvirt.cpus = 8
       # Required for virtiofs
       # libvirt.memorybacking :access, :mode => "shared"
     end
@@ -61,17 +62,17 @@ Vagrant.configure("2") do |config|
     exit
   SHELL
 
-
   config.vm.provision "shell", privileged: "false", inline: <<-SHELL
     echo bar
     sudo cp /home/vagrant/crt.pem /usr/local/share/ca-certificates/crt.crt
     sudo update-ca-certificates
     sudo apt-get update
     sudo apt-get upgrade
-    #git clone https://github.com/NationalSecurityAgency/ghidra.git
-    unzip -qq /vagrant/ghidra-master.zip
+    git clone https://github.com/NationalSecurityAgency/ghidra.git
+    #unzip -qq /vagrant/ghidr.zip
     sudo apt-get install -y openjdk-21-jdk
     sudo apt-get install -y openjdk-21-jre
+    sudo apt-get install -y gdb ddd
     #sudo mkdir /usr/local/sdkman
     #chown vagrant /usr/local/sdkman
     #export SDKMAN_DIR=/usr/local/sdkman
@@ -95,20 +96,33 @@ Vagrant.configure("2") do |config|
     su vagrant sdk
     sdk
     sdk install gradle 8.9
-    cd ghidra-master
+    sudo sdk install gradle 8.9
+    cd ghidra
+    gradle prepDev
     gradle -I gradle/support/fetchDependencies.gradle
     gradle buildGhidra
+    cd $HOME/ghidra/build/dist/
+    #sudo apt-get install -y binutils-dev-dev
+    #sudo apt-get install -y texinfo
+    #wget https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.bz2 
+    #mv binutils-2.41.tar.bz2 /home/vagrant/ghidr/build/dist/ghidra.bin/GPL/GnuDisassembler/binutils-2.41.tar.bz2
+    #sudo unzip ghidra_11.2_DEV_20240722_linux_x86_64.zip
+    #sudo unzip ghidra_11.2_DEV_20240722_GnuDisassembler.zip 
+    #sudo unzip /home/vagrant/ghidr/build/dist/ghidra_11.2_DEV/Extensions/Ghidra/ghidra_11.2_DEV_20240722_GnuDisassembler.zip -d /home/vagrant/ghidr/build/dist/ghidra_11.2_DEV/GPL
     echo Enter the host with: vagrant ssh
-    echo Run Ghidra by entering the following: ./ghidra-master/Ghidra/RuntimeScripts/Linux/ghidraRun
+    echo Run Ghidra by entering the following: ./ghidr/Ghidra/RuntimeScripts/Linux/ghidraRun
   SHELL
 
   
 
   ### To access services running within remote host, use the following pattern:
   # ssh -L8080:192.168.121.148:80 jasonabreitwieser@10.130.10.50
+  # To accept license:
+  # ssh -L5901:127.0.0.1:5901 jason@10.130.10.50
+  # ncviewer 127.0.0.1:5901
   ### This describes a website running on port 80 on 192.168.121.148 
   ### made available via local port 8080 
-  config.vm.network "forwarded_port", guest: 80, host: 8080
+  #onfig.vm.network "forwarded_port", guest: 80, host: 8080
   
   
   # Default false
@@ -121,6 +135,29 @@ Vagrant.configure("2") do |config|
   # Default 300s
   config.vm.boot_timeout = 900
 
+  #config.vm.provision "shell", inline: <<-SHELL
+    #sudo apt install -y x11vnc
+      # run interactively 
+      # sudo x11vnc -storepasswd
+      #    - or -
+      #  /etc/vncserver.pass
+      # sudo x11vnc
+      # sudo vi /etc/systemd/system/vncserver.service
+      # [Unit]
+      # Description=start vnc at boot
+      # After=multi-user.target
+      # 
+      # [Service]
+      # Type=simple
+      # ExecStart=/usr/bin/x11vnc -display :0 -auth guess -forever -loop -noxdamage -repeat -rfbauth /etc/vncserver.pass -rfbport 5900 -shared
+      # 
+      # [Install]
+      # WantedBy=multi-user.target
+      #
+      # sudo systemctl enable vncserver
+      # sudo systemctl start vncserver
+      # systemctl status vncserver
+  #SHELL
     
   config.vm.provision "shell", inline: <<-SHELL
     echo barby
@@ -134,6 +171,8 @@ Vagrant.configure("2") do |config|
     #sudo dnf install xorg-x11-apps
     #sudo dnf install -y xorg*
     #sudo dnf install -y @xfce-desktop-environment
+    unzip -qq /vagrant/asmsbs3e.zip
+    unzip -qq /vagrant/x64ASMSBS.zip
     sudo sed -i '/#X11Forwarding no/s//X11Forwarding yes/' /etc/ssh/sshd_config
     sudo rm -rf /root/.Xauthority
     sudo rm -rf /root/.serverauth.*  
